@@ -1,8 +1,11 @@
 ﻿using iText.IO.Image;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas;
+using iText.Kernel.Pdf.Xobject;
 using iText.Layout;
 using iText.Layout.Element;
+using iText.Layout.Layout;
 using iText.Layout.Properties;
 
 internal class Program
@@ -22,28 +25,23 @@ internal class Program
 
         PageSize pageSize = PageSize.A4;
         pdfDoc.SetDefaultPageSize(pageSize);
-        string imagePath = "SchulzLF_0.png";
+
 
         float imageMargin = CalcCentimeterToPoints(IMAGE_MARGIN_CM);
-        float nutzenHeight = (pageSize.GetHeight() / 2) - (2 * imageMargin);
         float imageWidth = pageSize.GetWidth() - (2 * imageMargin);
-        float imageHeight = nutzenHeight;
+        float imageHeight = (pageSize.GetHeight() / 2) - (2 * imageMargin);
 
-        ImageData imageData = ImageDataFactory.Create(imagePath);
-        Image image = new Image(imageData);
-        
-        
-        var tmpWidth = image.GetImageWidth();
-        var tmpHeight = image.GetImageHeight();
-        //image.SetAutoScaleHeight(false);
-        //image.SetAutoScaleWidth(false);
-        image.ScaleToFit(imageWidth, imageHeight);
-        document.Add(image);
-        image.SetFixedPosition(imageMargin, imageMargin);
+
+        var xObject = CreateReusableBlock(pdfDoc, imageWidth, imageHeight);
+        Image label = new Image(xObject).SetAutoScale(true);
+
+
+        document.Add(label);
+        label.SetFixedPosition(imageMargin, imageMargin);
+        document.Add(label);
 
 
 
-        document.Add(image);
         document.Close();
         byte[] pdfBytes = memoryStream.ToArray();
 
@@ -51,6 +49,26 @@ internal class Program
 
     }
 
+    private static PdfFormXObject CreateReusableBlock(PdfDocument pdf, float width, float height)
+    {
+        // Create a PdfFormXObject 
+        Rectangle rectangle = new Rectangle(width, height);
+        PdfFormXObject xObject = new PdfFormXObject(rectangle);
+
+        // Create PdfCanvas for PdfFormXObject
+        PdfCanvas canvas = new PdfCanvas(xObject, pdf);
+
+        string imagePath = "SchulzLF_0.png";
+        ImageData imageData = ImageDataFactory.Create(imagePath);
+
+        canvas.AddImageFittedIntoRectangle(imageData, rectangle, true);
+
+
+        // close the canvas
+        canvas.Release();
+
+        return xObject;
+    }
     private static float CalcCentimeterToPoints(float cm)
     {
         return (float)(cm * CM_TO_POINTS_FACTOR);
