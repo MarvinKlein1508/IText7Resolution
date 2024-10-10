@@ -31,11 +31,18 @@ internal class Program
 
         ImageData imageData = ImageDataFactory.Create(imagePath);
         Image image = new Image(imageData);
+        
+        
+        var tmpWidth = image.GetImageWidth();
+        var tmpHeight = image.GetImageHeight();
         //image.SetAutoScaleHeight(false);
         //image.SetAutoScaleWidth(false);
         image.ScaleToFit(imageWidth, imageHeight);
         document.Add(image);
         image.SetFixedPosition(imageMargin, imageMargin);
+
+
+
         document.Add(image);
         document.Close();
         byte[] pdfBytes = memoryStream.ToArray();
