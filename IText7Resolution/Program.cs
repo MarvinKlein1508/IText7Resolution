@@ -14,7 +14,7 @@ internal class Program
     private static async Task Main(string[] args)
     {
         using MemoryStream memoryStream = new MemoryStream();
-        PdfWriter writer = new PdfWriter(memoryStream);
+        PdfWriter writer = new PdfWriter(memoryStream, new WriterProperties().SetCompressionLevel(0));
         PdfDocument pdfDoc = new PdfDocument(writer);
         Document document = new Document(pdfDoc);
         float pageMargin = CalcCentimeterToPoints(PAGE_MARGIN_CM);
@@ -23,10 +23,19 @@ internal class Program
         PageSize pageSize = PageSize.A4;
         pdfDoc.SetDefaultPageSize(pageSize);
         string imagePath = "SchulzLF_0.png";
+
+        float imageMargin = CalcCentimeterToPoints(IMAGE_MARGIN_CM);
+        float nutzenHeight = (pageSize.GetHeight() / 2) - (2 * imageMargin);
+        float imageWidth = pageSize.GetWidth() - (2 * imageMargin);
+        float imageHeight = nutzenHeight;
+
         ImageData imageData = ImageDataFactory.Create(imagePath);
         Image image = new Image(imageData);
-        image.SetAutoScaleHeight(false);
-        image.SetAutoScaleWidth(false);
+        //image.SetAutoScaleHeight(false);
+        //image.SetAutoScaleWidth(false);
+        image.ScaleToFit(imageWidth, imageHeight);
+        document.Add(image);
+        image.SetFixedPosition(imageMargin, imageMargin);
         document.Add(image);
         document.Close();
         byte[] pdfBytes = memoryStream.ToArray();
